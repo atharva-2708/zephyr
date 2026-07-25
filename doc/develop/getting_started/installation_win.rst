@@ -1,35 +1,35 @@
-.. _win-setup-alts:
+Using USB in WSL2 (Troubleshooting)
+===================================
 
-Windows alternative setup instructions
-######################################
+Out of the box, WSL2 cannot see physical USB devices plugged into a Windows 
+machine. To be able to flash a board through WSL, a tool called ``usbipd-win`` 
+is used to share the USB port from Windows over to Linux.
 
-.. _win-wsl:
+1. Install usbipd on Windows:
+   Open PowerShell as Administrator in Windows and install the tool:
 
-Windows 10 WSL (Windows Subsystem for Linux)
-********************************************
+   .. code-block:: console
 
-If you are running a recent version of Windows 10 you can make use of the
-built-in functionality to natively run Ubuntu binaries directly on a standard
-command-prompt. This allows you to use software such as the :ref:`Zephyr SDK
-<toolchain_zephyr_sdk>` without setting up a virtual machine.
+      winget install --interactive --exact dorssel.usbipd-win
 
-.. warning::
-      Windows 10 version 1803 has an issue that will cause CMake to not work
-      properly and is fixed in version 1809 (and later).
-      More information can be found in :github:`Zephyr Issue 10420 <10420>`.
+2. Attach your board to WSL:
+   Plug in your board and run these commands in Windows PowerShell to find it 
+   and share it:
 
-#. `Install the Windows Subsystem for Linux (WSL)`_.
+   .. code-block:: console
 
-   .. note::
-         For the Zephyr SDK to function properly you will need Windows 10
-         build 15002 or greater. You can check which Windows 10 build you are
-         running in the "About your PC" section of the System Settings.
-         If you are running an older Windows 10 build you might need to install
-         the Creator's Update.
+      usbipd list
+      usbipd bind --busid <BUSID>
+      usbipd attach --wsl --busid <BUSID>
 
-#. Follow the Ubuntu instructions in the :ref:`installation_linux` document.
+3. Fixing WSL Permissions:
+   Even after attaching the USB, Linux might give a "Permission Denied" error 
+   (like on ``/dev/ttyUSB0``) when trying to flash. To fix this, add the WSL 
+   user to the dialout group:
 
-.. NOTE FOR DOCS AUTHORS: as a reminder, do *NOT* put dependencies for building
-   the documentation itself here.
+   .. code-block:: console
 
-.. _Install the Windows Subsystem for Linux (WSL): https://msdn.microsoft.com/en-us/commandline/wsl/install_guide
+      sudo usermod -aG dialout $USER
+
+   Completely close and reopen the WSL terminal after running this so the 
+   permissions take effect.
